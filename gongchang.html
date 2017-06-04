@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<title>工厂模式</title>
+</head>
+<body>
+<script type="text/javascript" src="interface.js"></script>
+<script type="text/javascript" src="extend.js"></script>
+<script type="text/javascript">
+
+var SimpleShop = (function(){
+	//一，简单工厂
+    //定义一个工厂类
+	var Bicycle = new Interface('Bicycle',['assemble', 'wash'])
+	var BicycleShop = function() {}
+	BicycleShop.prototype = {
+		constructor: BicycleShop,
+		sellBicycle: function(model) { //工厂方法(可以用单体提起这个工厂方法出来，单体封装为简单工厂，方便后续维护)
+			var bicycle;
+			switch(model) {
+				case "The Speedster":
+				bicycle = new Speedster();
+				break;
+				case "The Lowrider":
+				bicycle = new Lowrider();
+				break;
+				default:
+				bicycle = new defaulter();
+				break; 
+			}
+			Interface.ensureImplements(bicycle, Bicycle); 
+			//优化后采用下边的单体对象即简单工厂生产出对应的类型车，以上代码全部去除
+			// var bicycle = BicycleFactory.createBicycle(model);
+			bicycle.assemble();
+			bicycle.wash()
+			return bicycle;
+
+			
+		}
+	}
+	//车型分类(这里可以抽象出一个super类，让下边都继承它)
+	function Speedster(){}
+	Speedster.prototype = { //implements Bicycle
+		constructor: Speedster,
+		assemble: function() {
+			console.log("我是负责组装车的");
+		},
+		wash: function() {
+			console.log("我是负责清洗车的");
+		}
+	}
+	function Lowrider(){}
+	Lowrider.prototype = { //implements Bicycle
+		constructor: Lowrider,
+		assemble: function() {},
+		wash: function() {}
+	}
+	function defaulter(){}
+	defaulter.prototype = { //implements Bicycle
+		constructor: defaulter,
+		assemble: function() {},
+		wash: function() {}
+	}
+
+	//运用
+	//生产出一个车型售卖
+	var bicycleInstance = new BicycleShop();
+	var newBicycle = bicycleInstance.sellBicycle('The Speedster');
+
+
+	// .....
+	//考虑到以上的工厂类，要是想要添加不同车型时，就会又去改这个工厂类BicycleShop的实现，所以可以用单体来创建工厂方法，
+	// 简称“简单工厂”
+	// 单独提起以上的工厂方法，抽出来这样就好维护了，生产不同车型都在同一个地方维护。
+	// 有关可供车型的所有信息都集中在一个地方管理，所有添加更多车型很容易。提取如下（也可以说是以上的优化版本）
+	var BicycleFactory = {
+		createBicycle: function(model) { //implements Bicycle
+			var bicycle;
+			switch(model) {
+				case "The Speedster":
+				bicycle = new Speedster();
+				break;
+				case "The Lowrider":
+				bicycle = new Lowrider();
+				break;
+				default:
+				bicycle = new defaulter();
+				break;
+			}
+			Interface.ensureImplements(bicycle, Bicycle); 
+			return bicycle;
+		}
+	}
+
+	return BicycleShop;
+})()
+
+
+
+var AbstractShop = (function(){
+	//二，工厂模式
+	//真正的工厂模式和简单的工厂模式区别在于：它不是另外使用一个类或对象(就像上边所做的那样)
+	//来创建自行车，而是使用一个子类
+	//正式定义：工厂是将其成员对象的实例化（就如上边，里边实例化的车型类）推迟到子类中进行的类。
+
+	//先抽象一个生产自行车的父类，是为了让子类继承后才真正实例化车型类生产出要售卖的新车
+	//以下将使用相同的名称来从新实现以上的简单工厂，好做对比，真正的工厂模式和简单工厂模式的区别所在
+	var BicycleShop = function() {};
+	BicycleShop.prototype = {
+		constructor: BicycleShop,
+		sellBicycle: function(model) {
+			var bicycle = this.createBicycle(model);
+			bicycle.assemble();
+			bicycle.wash();
+			return bicycle;
+		},
+		createBicycle: function(model) {
+		 //工厂方法，内部代码实现推迟由子类自己实现，只要子类中生成出来的对象
+		 //（这里指的是bicycle对象）都实现了相同接口即可。
+			throw new Error('在抽象类上不支持直接实例化操作')
+		}
+	}
+	
+	var Bicycle = new Interface('Bicycle',['assemble', 'wash']); //定义接口
+
+	//子类，不同子类代表不同商店，每个商店都有自己实现的一套创建车型的方法。
+	var AsubBicycleshop = function() {} //A自行车商店
+	extend(AsubBicycleshop, BicycleShop);
+	AsubBicycleshop.prototype.createBicycle = function(model) {
+		var bicycle;
+		switch(model) {
+			case "The Speedster":
+			bicycle = new AsubSpeedSter();
+			break;
+			case "The Lowrider":
+			bicycle = new AsubLowrider();
+			break;
+			default:
+			bicycle = new AsubDefaulter();
+			break;
+		}
+		Interface.ensureImplements(bicycle, Bicycle);
+		return bicycle;
+	}
+
+	//车型分类(这里可以抽象出一个super类，让下边都继承它)
+	function AsubSpeedSter(){}
+	AsubSpeedSter.prototype = { //implements Bicycle
+		constructor: AsubSpeedSter,
+		assemble: function() {
+			console.log("我是A商店的车，我是负责组装车的");
+		},
+		wash: function() {
+			console.log("我是A商店的车，我是负责清洗车的");
+		}
+	}
+	function AsubLowrider(){}
+	AsubLowrider.prototype = { //implements Bicycle
+		constructor: AsubLowrider,
+		assemble: function() {},
+		wash: function() {}
+	}
+	function AsubDefaulter(){}
+	AsubDefaulter.prototype = { //implements Bicycle
+		constructor: AsubDefaulter,
+		assemble: function() {},
+		wash: function() {}
+	}
+
+	//以上这些工厂方法生成的对象都实现了Bicycle接口，所有在其他代码眼里他们是完全可以互换的（定义接口的好处就在这里）
+	//同理，你还不断可以创建B商店，C商店，等等，都是一样的。
+
+	// 使用
+
+	var AsubInstance = new AsubBicycleshop();
+	var AsubNweBicycle = AsubInstance.sellBicycle('The Speedster');
+
+	return {
+		BicycleShop: BicycleShop,
+		AsubBicycleshop: AsubBicycleshop
+	}
+})()
+
+
+</script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>测试接口的使用</title>
+</head>
+<body>
+<script type="text/javascript" src="interface.js"></script>
+<script type="text/javascript">
+	var myInterface = new Interface("myInterface", ['getName', 'getAge']);
+	var myObject = { //implements myInterface
+		_name: "wenyang",
+		_age: 29,
+		getName: function () {
+			return this._name;
+		},
+		getAge: function () {
+			return this._age;
+		}
+	}
+	Interface.ensureImplements(myObject, myInterface);
+</script>
+</body>
+</html>
